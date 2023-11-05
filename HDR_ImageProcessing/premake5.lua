@@ -45,6 +45,7 @@ project "HDR_ImageProcessing"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.tinyexr}",
+                "%{IncludeDir.TinyEXIF}",
                 "%{IncludeDir.Eigen}",
 		"%{IncludeDir.Spectra}",
 		"src",
@@ -57,6 +58,7 @@ project "HDR_ImageProcessing"
 		"GLFW",
 		"Glad",
 		"ImGui",
+                "TinyEXIF",
 		"opengl32.lib",
 	}
 

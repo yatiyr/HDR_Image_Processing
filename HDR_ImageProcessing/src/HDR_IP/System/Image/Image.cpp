@@ -14,6 +14,7 @@ namespace HDR_IP
 
 			std::filesystem::path fP(filePath);
 
+			m_Name = fP.filename().string();
 			m_Data = (char*)stbi_load(filePath, &m_Width, &m_Height, &m_Channels, 0);
 
 			GLenum internalFormat = 0, dataFormat = 0;
@@ -41,13 +42,33 @@ namespace HDR_IP
 			glTextureParameteri(m_OpenGLID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTextureParameteri(m_OpenGLID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTextureParameteri(m_OpenGLID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTextureStorage2D(m_OpenGLID, 1, internalFormat, m_Width, m_Height);
+			glTextureSubImage2D(m_OpenGLID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, m_Data);
+			//glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, m_Data);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, m_Data);
+
+			// Parse Exif Info
+			std::ifstream file(filePath, std::ifstream::binary);
+
+			TinyEXIF::EXIFInfo exifInfo(file);
+			if (exifInfo.Fields)
+			{
+				HDR_IP_TRACE("\tImage Description: {0}", exifInfo.ImageDescription);
+				HDR_IP_TRACE("\tImage Resolution: ({0},{1})", exifInfo.ImageWidth, exifInfo.ImageHeight);
+				HDR_IP_TRACE("\tCamera Model: {0} - {1}", exifInfo.Make, exifInfo.Model);
+				HDR_IP_TRACE("\tFocal Length: {0}", exifInfo.FocalLength);
+			}
+
+			m_ExifInfo = exifInfo;
+
+
+			Pixel rp = GetPixel(0, 0);
+			HDR_IP_TRACE("RGB values for pixel 0 0 : ({0}, {1}, {2})", rp.r, rp.g, rp.b);
 
 		}
 		catch (const std::exception&)
 		{
-			HDR_IP_ERROR("Failed to load the Image");
+			HDR_IP_ERROR("\tFailed to load the Image");
 		}
 	}
 
@@ -62,19 +83,34 @@ namespace HDR_IP
 		glDeleteTextures(1, &m_OpenGLID);
 	}
 
-	int Image::GetWidth()
+	std::string Image::GetName() const
+	{
+		return m_Name;
+	}
+
+	float Image::GetExposureTime() const
+	{
+		return m_ExifInfo.ExposureTime;
+	}
+
+	int Image::GetWidth() const
 	{
 		return m_Width;
 	}
 
-	int Image::GetHeight()
+	int Image::GetHeight() const
 	{
 		return m_Height;
 	}
 
-	int Image::GetChannels()
+	int Image::GetChannels() const
 	{
 		return m_Channels;
+	}
+
+	uint32_t Image::GetOpenGLID() const
+	{
+		return m_OpenGLID;
 	}
 
 	Pixel Image::GetPixel(int i, int j)

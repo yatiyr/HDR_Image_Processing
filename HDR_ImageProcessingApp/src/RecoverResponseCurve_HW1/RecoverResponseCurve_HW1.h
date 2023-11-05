@@ -1,7 +1,8 @@
 #pragma once
 
 #include <HdrIp.h>
-
+#include <HDR_IP/System/Image/Image.h>
+#include <filesystem>
 
 namespace HDR_IP
 {
@@ -24,16 +25,15 @@ namespace HDR_IP
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
+
+	// HW RELATED PART
+	private:
+		void InvalidateImages(std::filesystem::path path);
 	private:
 		void RenderDockspace();
 	private:
-
-		bool m_ViewportFocused = false;
-		bool m_ViewportHovered = false;
-
-
-		bool m_ExportInProgress = false;
-		std::future<void> m_ExportState;
+		std::vector<Ref<Image>> m_Images;
+		Ref<Image> m_SelectedImage;
 	private:
 		static RecoverResponseCurve_HW1* s_Instance;
 		friend class ViewportComponent;

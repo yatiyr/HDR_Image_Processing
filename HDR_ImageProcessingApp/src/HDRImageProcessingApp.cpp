@@ -14,7 +14,7 @@ namespace HDR_IP
     {
     public:
         HdrIpApp()
-            : Application("Gp App")
+            : Application("HDR Image Processing App")
         {
             RecoverResponseCurve_HW1* recoverResponseCurve_HW1 = RecoverResponseCurve_HW1::CreateRecoverResponseCurve_HW1();
             PushLayer(recoverResponseCurve_HW1);

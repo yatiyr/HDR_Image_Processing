@@ -13,7 +13,7 @@
 
 #include <glad/glad.h>
 
-
+#include <set>
 
 #include <HDR_IP/System/Utils/PlatformUtils.h>
 
@@ -32,6 +32,41 @@ namespace HDR_IP
 	void RecoverResponseCurve_HW1::OnAttach()
 	{
 
+	}
+
+	void RecoverResponseCurve_HW1::InvalidateImages(std::filesystem::path path)
+	{
+
+		m_Images.clear();
+		if (m_SelectedImage)
+			m_SelectedImage.reset();
+
+		try
+		{
+			int count = 0;
+
+			for (const auto& entry : std::filesystem::directory_iterator(path))
+			{
+				if (entry.is_regular_file() && (
+					entry.path().extension() == ".png" ||
+					entry.path().extension() == ".jpeg" ||
+					entry.path().extension() == ".jpg" ||
+					entry.path().extension() == ".JPG" ||
+					entry.path().extension() == ".bmp" ||
+					entry.path().extension() == ".tga"))
+				{
+					Ref<Image> im = Image::CreateImage(entry.path().string().c_str());
+					m_Images.push_back(im);
+					count++;
+				}
+			}
+
+			HDR_IP_INFO("There are {0} image files in this directory.", count);
+		}
+		catch (const std::exception&)
+		{
+			HDR_IP_ERROR("An error occured while loading images");
+		}
 	}
 
 	void RecoverResponseCurve_HW1::RenderDockspace()
@@ -116,17 +151,17 @@ namespace HDR_IP
 				// ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
 				if (ImGui::MenuItem("New", "Ctrl+N"))
 				{
-					
+
 				}
 
 				if (ImGui::MenuItem("Open...", "Ctrl+O"))
 				{
-					
+
 				}
 
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
 				{
-					
+
 				}
 
 				if (ImGui::MenuItem("Exit")) { Application::Get().Close(); }
@@ -145,17 +180,54 @@ namespace HDR_IP
 		ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoTitleBar);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
 
-		if (ImGui::Button("Open Folder"))
+		if (m_Images.size() > 0)
+		{
+			ImGui::Text("Images in the selected Folder");
+
+			for (auto& image : m_Images)
+			{
+				ImGui::Text("Image Name: %s", image->GetName().c_str());
+				float imageAspectRatio = (float)image->GetWidth() / (float)image->GetHeight();
+
+				if (ImGui::ImageButton((void*)(intptr_t)image->GetOpenGLID(), ImVec2(350 / imageAspectRatio, 350 / imageAspectRatio), ImVec2{ 0, 1 }, ImVec2{ 1, 0 }))
+				{
+					m_SelectedImage = image;
+				}
+			}
+		}
+
+		if (ImGui::Button("Select Folder"))
 		{
 			std::wstring x = FileDialogs::BrowseFolder();
 			std::filesystem::path path(x);
 			HDR_IP_INFO("Folder {0} has been opened", path.string());
+			InvalidateImages(path);
 		}
 
 		ImGui::PopStyleVar();
 		ImGui::End();
 		ImGui::PopStyleVar();
 
+		// -------------- SELECTED IMAGE ------------------------- //
+		if (m_SelectedImage)
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+			ImGui::Begin("SelectedImage", nullptr, ImGuiWindowFlags_NoTitleBar);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+
+			float imageAspectRatio = (float)m_SelectedImage->GetWidth() / (float)m_SelectedImage->GetHeight();
+			ImVec2 panelSize = ImGui::GetContentRegionAvail();
+
+			int minSize = std::min(panelSize.x, panelSize.y);
+
+			ImGui::Image((void*)(intptr_t)m_SelectedImage->GetOpenGLID(), ImVec2(std::min(minSize * imageAspectRatio, panelSize.x), std::min(minSize * imageAspectRatio, panelSize.y)), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+
+			ImGui::PopStyleVar();
+			ImGui::End();
+			ImGui::PopStyleVar();
+		}
+		// -------------- SELECTED IMAGE ------------------------- //
 
 		ImGui::End();
 

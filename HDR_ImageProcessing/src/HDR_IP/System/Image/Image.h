@@ -4,6 +4,7 @@
 #include <stb_image.h>
 #include <HDR_IP/System/CoreSystem/Application.h>
 #include <glm/glm.hpp>
+#include <TinyEXIF.h>
 
 namespace HDR_IP
 {
@@ -23,20 +24,28 @@ namespace HDR_IP
 
 		~Image();
 
-		int GetWidth();
-		int GetHeight();
-		int GetChannels();
-
 		Pixel GetPixel(int i, int j);
 	public:
 		static Ref<Image> CreateImage(const char* filePath);
+
+	// Getters and Setters
+	public:
+		std::string GetName() const;
+		float GetExposureTime() const;
+		int GetWidth() const;
+		int GetHeight() const;
+		int GetChannels() const;
+		uint32_t GetOpenGLID() const;
+
 	private:
+		std::string m_Name;
 		int m_Width;
 		int m_Height;
 		int m_Channels;
 
 		uint32_t m_OpenGLID;
 
+		TinyEXIF::EXIFInfo m_ExifInfo;
 		char* m_Data;
 	};
 }

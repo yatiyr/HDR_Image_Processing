@@ -26,6 +26,8 @@ project "HDR_ImageProcessingApp"
 		"%{IncludeDir.Glad}",
                 "%{IncludeDir.Eigen}",
 		"%{IncludeDir.Spectra}",
+		"%{IncludeDir.stb_image}",
+                "%{IncludeDir.TinyEXIF}",
 		"src"
 	}
 
