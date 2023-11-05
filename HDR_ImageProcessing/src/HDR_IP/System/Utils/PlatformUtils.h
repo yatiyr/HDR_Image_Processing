@@ -10,5 +10,7 @@ namespace HDR_IP
 		// They return empty string if cancelled
 		static std::string OpenFile(const char* filter);
 		static std::string SaveFile(const char* filter);
+
+		static std::wstring BrowseFolder();
 	};
 }

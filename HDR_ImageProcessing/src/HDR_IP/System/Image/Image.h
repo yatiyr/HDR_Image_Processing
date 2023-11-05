@@ -28,7 +28,8 @@ namespace HDR_IP
 		int GetChannels();
 
 		Pixel GetPixel(int i, int j);
-
+	public:
+		static Ref<Image> CreateImage(const char* filePath);
 	private:
 		int m_Width;
 		int m_Height;

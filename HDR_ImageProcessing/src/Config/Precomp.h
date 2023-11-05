@@ -26,6 +26,9 @@
 #include <thread>
 #include <atomic>
 
+#include <locale>
+#include <codecvt>
+
 #include <HDR_IP/System/CoreSystem/Logger.h>
 
 #ifdef OP_PLATFORM_WINDOWS

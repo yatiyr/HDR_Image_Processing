@@ -6,7 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#include <Editor/EditorLayer.h>
+#include <RecoverResponseCurve_HW1/RecoverResponseCurve_HW1.h>
 
 namespace HDR_IP
 {
@@ -16,8 +16,8 @@ namespace HDR_IP
         HdrIpApp()
             : Application("Gp App")
         {
-            EditorLayer* editorLayer = EditorLayer::CreateEditor();
-            PushLayer(editorLayer);
+            RecoverResponseCurve_HW1* recoverResponseCurve_HW1 = RecoverResponseCurve_HW1::CreateRecoverResponseCurve_HW1();
+            PushLayer(recoverResponseCurve_HW1);
         }
 
         ~HdrIpApp()

@@ -51,6 +51,11 @@ namespace HDR_IP
 		}
 	}
 
+	Ref<Image> Image::CreateImage(const char* filePath)
+	{
+		return std::make_shared<Image>(filePath);
+	}
+
 	Image::~Image()
 	{
 		free(m_Data);

@@ -1,4 +1,4 @@
-#include <Editor/EditorLayer.h>
+#include <RecoverResponseCurve_HW1/RecoverResponseCurve_HW1.h>
 #include <imgui/imgui.h>
 #include <implot/implot.h>
 
@@ -13,24 +13,28 @@
 
 #include <glad/glad.h>
 
+
+
+#include <HDR_IP/System/Utils/PlatformUtils.h>
+
 namespace HDR_IP
 {
-	EditorLayer* EditorLayer::s_Instance = nullptr;
+	RecoverResponseCurve_HW1* RecoverResponseCurve_HW1::s_Instance = nullptr;
 
-	EditorLayer* EditorLayer::CreateEditor()
+	RecoverResponseCurve_HW1* RecoverResponseCurve_HW1::CreateRecoverResponseCurve_HW1()
 	{
-		s_Instance = new EditorLayer();
+		s_Instance = new RecoverResponseCurve_HW1();
 		return s_Instance;
 	}
 
-	EditorLayer::EditorLayer() : Layer("EditorLayer") {}
+	RecoverResponseCurve_HW1::RecoverResponseCurve_HW1() : Layer("RecoverResponseCurve_HW1") {}
 
-	void EditorLayer::OnAttach()
+	void RecoverResponseCurve_HW1::OnAttach()
 	{
 
 	}
 
-	void EditorLayer::RenderDockspace()
+	void RecoverResponseCurve_HW1::RenderDockspace()
 	{
 		static bool dockspaceOpen = true;
 		static bool opt_fullscreen = true;
@@ -89,20 +93,15 @@ namespace HDR_IP
 		style.WindowMinSize.x = minWinSizeX;
 	}
 
-	void EditorLayer::OnDetach() {}
+	void RecoverResponseCurve_HW1::OnDetach() {}
 
-	void EditorLayer::OnUpdate(TimeStep ts)
+	void RecoverResponseCurve_HW1::OnUpdate(TimeStep ts)
 	{
-		m_ViewportComponent.ResizeFramebuffer();
-
-
-
-		glm::vec2 viewportSize = m_ViewportComponent.GetViewportSize();
 
 	}
 
 
-	void EditorLayer::OnImGuiRender()
+	void RecoverResponseCurve_HW1::OnImGuiRender()
 	{
 		RenderDockspace();
 
@@ -142,13 +141,16 @@ namespace HDR_IP
 		ImGui::PopStyleVar();
 
 
-		m_ViewportComponent.OnImGuiRender();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
 		ImGui::Begin("Properties", nullptr, ImGuiWindowFlags_NoTitleBar);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
 
-
+		if (ImGui::Button("Open Folder"))
+		{
+			std::wstring x = FileDialogs::BrowseFolder();
+			std::filesystem::path path(x);
+			HDR_IP_INFO("Folder {0} has been opened", path.string());
+		}
 
 		ImGui::PopStyleVar();
 		ImGui::End();
@@ -159,27 +161,26 @@ namespace HDR_IP
 
 	}
 
-	void EditorLayer::OnEvent(Event& e)
+	void RecoverResponseCurve_HW1::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FUNCTION(EditorLayer::OnKeyPressed));
-		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_EVENT_FUNCTION(EditorLayer::OnMouseButtonPressed));
-		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FUNCTION(EditorLayer::OnWindowResized));
+		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FUNCTION(RecoverResponseCurve_HW1::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_EVENT_FUNCTION(RecoverResponseCurve_HW1::OnMouseButtonPressed));
+		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FUNCTION(RecoverResponseCurve_HW1::OnWindowResized));
 	}
 
-	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	bool RecoverResponseCurve_HW1::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		m_ViewportComponent.OnMouseButtonPressed(e);
 		return false;
 	}
 
-	bool EditorLayer::OnWindowResized(WindowResizeEvent& e)
+	bool RecoverResponseCurve_HW1::OnWindowResized(WindowResizeEvent& e)
 	{
 		// MainRender::ResizeViewport(e.GetWidth(), e.GetHeight());
 		return false;
 	}
 
-	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	bool RecoverResponseCurve_HW1::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (e.GetRepeatCount() > 0)
 			return false;

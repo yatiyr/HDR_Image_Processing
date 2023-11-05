@@ -3,15 +3,13 @@
 #include <HdrIp.h>
 
 
-#include <Editor/ViewportComponent.h>
-
 namespace HDR_IP
 {
-	class EditorLayer : public Layer
+	class RecoverResponseCurve_HW1 : public Layer
 	{
 	public:
-		EditorLayer();
-		virtual ~EditorLayer() {}
+		RecoverResponseCurve_HW1();
+		virtual ~RecoverResponseCurve_HW1() {}
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 
@@ -19,8 +17,8 @@ namespace HDR_IP
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 
-		static EditorLayer* CreateEditor();
-		static EditorLayer* GetEditor() { return s_Instance; }
+		static RecoverResponseCurve_HW1* CreateRecoverResponseCurve_HW1();
+		static RecoverResponseCurve_HW1* GetRecoverResponseCurve_HW1() { return s_Instance; }
 
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
@@ -29,18 +27,15 @@ namespace HDR_IP
 	private:
 		void RenderDockspace();
 	private:
-		ViewportComponent m_ViewportComponent;
 
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
-		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
-		glm::vec2 m_ViewportBounds[2];
 
 
 		bool m_ExportInProgress = false;
 		std::future<void> m_ExportState;
 	private:
-		static EditorLayer* s_Instance;
+		static RecoverResponseCurve_HW1* s_Instance;
 		friend class ViewportComponent;
 	};
 }
