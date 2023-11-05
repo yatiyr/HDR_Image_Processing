@@ -3,6 +3,7 @@
 #include <HdrIp.h>
 #include <HDR_IP/System/Image/Image.h>
 #include <filesystem>
+#include <RecoverResponseCurve_HW1/Image_RRC.h>
 
 namespace HDR_IP
 {

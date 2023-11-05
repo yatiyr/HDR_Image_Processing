@@ -88,11 +88,6 @@ namespace HDR_IP
 		return m_Name;
 	}
 
-	float Image::GetExposureTime() const
-	{
-		return m_ExifInfo.ExposureTime;
-	}
-
 	int Image::GetWidth() const
 	{
 		return m_Width;
@@ -111,6 +106,11 @@ namespace HDR_IP
 	uint32_t Image::GetOpenGLID() const
 	{
 		return m_OpenGLID;
+	}
+
+	TinyEXIF::EXIFInfo Image::GetEXIFInfo() const
+	{
+		return m_ExifInfo;
 	}
 
 	Pixel Image::GetPixel(int i, int j)

@@ -31,12 +31,11 @@ namespace HDR_IP
 	// Getters and Setters
 	public:
 		std::string GetName() const;
-		float GetExposureTime() const;
 		int GetWidth() const;
 		int GetHeight() const;
 		int GetChannels() const;
 		uint32_t GetOpenGLID() const;
-
+		TinyEXIF::EXIFInfo GetEXIFInfo() const;
 	private:
 		std::string m_Name;
 		int m_Width;

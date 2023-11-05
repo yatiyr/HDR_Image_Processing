@@ -204,6 +204,14 @@ namespace HDR_IP
 			InvalidateImages(path);
 		}
 
+		if (m_Images.size() > 0)
+		{
+			if (ImGui::Button("Recover Response Curve"))
+			{
+				Image_RRC::RecoverResponseCurve(m_Images);
+			}
+		}
+
 		ImGui::PopStyleVar();
 		ImGui::End();
 		ImGui::PopStyleVar();
