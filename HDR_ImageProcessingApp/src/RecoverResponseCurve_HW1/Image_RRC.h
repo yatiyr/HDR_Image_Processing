@@ -13,7 +13,7 @@ namespace HDR_IP
 		
 	private:
 		static std::vector<std::vector<float>> GetSamplePixelsFromImage(Ref<Image> image, int n);
-		static void SolveSystem();
+		static std::vector<float> SolveSystem(std::vector<std::vector<float>> pixels, std::vector<float> logDeltaT, float l);
 		static float W(float val);
 	};
 }
