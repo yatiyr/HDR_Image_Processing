@@ -22,11 +22,12 @@ namespace HDR_IP
 		static RecoverResponseCurve_HW1* CreateRecoverResponseCurve_HW1();
 		static RecoverResponseCurve_HW1* GetRecoverResponseCurve_HW1() { return s_Instance; }
 
+
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 		bool OnWindowResized(WindowResizeEvent& e);
-
+		bool m_ResponseCurvesReady = false;
 	// HW RELATED PART
 	private:
 		void InvalidateImages(std::filesystem::path path);

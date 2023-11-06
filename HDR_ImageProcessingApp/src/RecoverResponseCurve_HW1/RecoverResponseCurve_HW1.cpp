@@ -209,6 +209,7 @@ namespace HDR_IP
 			if (ImGui::Button("Recover Response Curve"))
 			{
 				Image_RRC::RecoverResponseCurve(m_Images);
+				m_ResponseCurvesReady = true;
 			}
 		}
 
@@ -236,6 +237,34 @@ namespace HDR_IP
 			ImGui::PopStyleVar();
 		}
 		// -------------- SELECTED IMAGE ------------------------- //
+
+		// ---------------- RESPONSE CURVE ----------------- //
+		if (m_ResponseCurvesReady)
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+			ImGui::Begin("Response Curve", nullptr, ImGuiWindowFlags_NoTitleBar);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+
+			std::vector<float> rCR = Image_RRC::GetResponseCurveR();
+			std::vector<float> rCG = Image_RRC::GetResponseCurveG();
+			std::vector<float> rCB = Image_RRC::GetResponseCurveB();
+			std::vector<float> pixValueF = Image_RRC::GetPixelValueFunc();
+
+
+			if (ImPlot::BeginPlot("Response Curve", ImVec2(-1, 0))) {
+				ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Linear);
+				ImPlot::SetupAxesLimits(-3.0, 1.5, 0, 256);
+				ImPlot::PlotLine("Red", rCR.data(), pixValueF.data(), rCR.size());
+				ImPlot::PlotLine("Green", rCG.data(), pixValueF.data(), rCG.size());
+				ImPlot::PlotLine("Blue", rCB.data(), pixValueF.data(), rCB.size());
+				ImPlot::EndPlot();
+			}
+
+			ImGui::PopStyleVar();
+			ImGui::End();
+			ImGui::PopStyleVar();
+		}
+		// ---------------- RESPONSE CURVE ----------------- //
 
 		ImGui::End();
 

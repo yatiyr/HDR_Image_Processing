@@ -12,7 +12,7 @@ namespace HDR_IP
 	{
 
 		// Pixel neighbour val
-		int pnv = 50;
+		int pnv = 100;
 
 		std::vector<std::vector<float>> pixelsR;
 		std::vector<std::vector<float>> pixelsG;
@@ -20,7 +20,10 @@ namespace HDR_IP
 
 		std::vector<float> exposureVals;
 
-		std::vector<float> responseCurve;
+		std::vector<float> responseCurveR;
+		std::vector<float> responseCurveG;
+		std::vector<float> responseCurveB;
+		std::vector<float> pixelValueFunc;
 	} s_Image_RRCData;
 
 	struct PixelVariance
@@ -36,6 +39,12 @@ namespace HDR_IP
 		s_Image_RRCData.pixelsR.clear();
 		s_Image_RRCData.pixelsG.clear();
 		s_Image_RRCData.pixelsB.clear();
+		s_Image_RRCData.pixelValueFunc.clear();
+
+		for (int i = 6; i < 256; i++)
+		{
+			s_Image_RRCData.pixelValueFunc.push_back((float)i);
+		}
 
 		// Resize the vectors
 		s_Image_RRCData.pixelsR.resize(images.size());
@@ -66,7 +75,7 @@ namespace HDR_IP
 		{
 			TinyEXIF::EXIFInfo imageInfo = images[i]->GetEXIFInfo();
 			// Get Samples for each image
-			std::vector<std::vector<float>> samples = GetSamplePixelsFromImage(images[i], 300);
+			std::vector<std::vector<float>> samples = GetSamplePixelsFromImage(images[i], 400);
 			s_Image_RRCData.pixelsR[i] = samples[0];
 			s_Image_RRCData.pixelsG[i] = samples[1];
 			s_Image_RRCData.pixelsB[i] = samples[2];
@@ -74,7 +83,7 @@ namespace HDR_IP
 			float extime = 1.0f;
 			if (imageInfo.ExposureTime == 0)
 			{
-				extime = ((float)i / (float)images.size()) + 0.1f;
+				extime = ((float)i * 2 / (float)images.size()) + 0.1f;
 				s_Image_RRCData.exposureVals.push_back(std::log(extime));
 			}
 			else
@@ -85,8 +94,30 @@ namespace HDR_IP
 			
 		}
 
-		s_Image_RRCData.responseCurve = SolveSystem(s_Image_RRCData.pixelsR, s_Image_RRCData.exposureVals, 25.0);
+		s_Image_RRCData.responseCurveR = SolveSystem(s_Image_RRCData.pixelsR, s_Image_RRCData.exposureVals, 250.0);
+		s_Image_RRCData.responseCurveG = SolveSystem(s_Image_RRCData.pixelsG, s_Image_RRCData.exposureVals, 250.0);
+		s_Image_RRCData.responseCurveB = SolveSystem(s_Image_RRCData.pixelsB, s_Image_RRCData.exposureVals, 250.0);
 
+	}
+
+	std::vector<float>& Image_RRC::GetResponseCurveR()
+	{
+		return s_Image_RRCData.responseCurveR;
+	}
+
+	std::vector<float>& Image_RRC::GetResponseCurveG()
+	{
+		return s_Image_RRCData.responseCurveG;
+	}
+
+	std::vector<float>& Image_RRC::GetResponseCurveB()
+	{
+		return s_Image_RRCData.responseCurveB;
+	}
+
+	std::vector<float>& Image_RRC::GetPixelValueFunc()
+	{
+		return s_Image_RRCData.pixelValueFunc;
 	}
 
 	std::vector<std::vector<float>> Image_RRC::GetSamplePixelsFromImage(Ref<Image> image, int n)
@@ -116,16 +147,16 @@ namespace HDR_IP
 				{
 					j += 10;
 
-					PixelVariance pvR{ px.r, 0.0 };
-					PixelVariance pvG{ px.g, 0.0 };
-					PixelVariance pvB{ px.b, 0.0 };
+					PixelVariance pvR{ px.r, 10000000};
+					PixelVariance pvG{ px.g, 10000000};
+					PixelVariance pvB{ px.b, 10000000};
 
 					// Push pixel variance couples to min heaps
 					// pqR.push(pvR); pqG.push(pvG); pqB.push(pvB);
 					continue;
 				}
 					
-				/*std::vector<Pixel> neighborhoodPixels;
+				std::vector<Pixel> neighborhoodPixels;
 				int val = s_Image_RRCData.pnv / 2;
 
 				// Get Obtainable pixels in the neighborhood
@@ -166,21 +197,21 @@ namespace HDR_IP
 					bVariance += std::pow((pixel.b - bMean), 2);
 				}
 
-				rVariance /= count; gVariance /= count; bVariance /= count; */
+				rVariance /= count; gVariance /= count; bVariance /= count;
 
 				// Pixel variance couples for each channel
 
-				PixelVariance pvR { px.r, std::rand() * 10};
-				PixelVariance pvG { px.g, std::rand() * 10 };
-				PixelVariance pvB { px.b, std::rand() * 10 };
+				PixelVariance pvR { px.r, rVariance };//std::rand() * 10};
+				PixelVariance pvG { px.g, gVariance };
+				PixelVariance pvB { px.b, bVariance };
 
 				// Push pixel variance couples to min heaps
 				pqR.push(pvR); pqG.push(pvG); pqB.push(pvB);
 
-				j += imageWidth / 100;
+				j += imageWidth / 25;
 			}
 
-			i += imageHeight / 100;
+			i += imageHeight / 25;
 		}
 
 		// Get n samples from each min heap and populate the resulting part
@@ -241,7 +272,7 @@ namespace HDR_IP
 
 		std::vector<float> result;
 
-		for (int i = 0; i < n; i++)
+		for (int i = 6; i < n; i++)
 			result.push_back(x(i));
 
 		return result;
@@ -252,7 +283,7 @@ namespace HDR_IP
 	{
 		// Zmin -> 0
 		// Zmax -> 255
-		float comp = (1.0f / 2.0f) * (255.0f);
+		float comp = 128.0f;
 
 		if (val <= comp)
 		{
