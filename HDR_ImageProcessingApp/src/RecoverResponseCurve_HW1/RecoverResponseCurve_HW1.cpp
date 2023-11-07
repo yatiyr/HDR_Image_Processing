@@ -19,11 +19,17 @@
 
 namespace HDR_IP
 {
+
 	RecoverResponseCurve_HW1* RecoverResponseCurve_HW1::s_Instance = nullptr;
 
 	RecoverResponseCurve_HW1* RecoverResponseCurve_HW1::CreateRecoverResponseCurve_HW1()
 	{
 		s_Instance = new RecoverResponseCurve_HW1();
+
+
+		ImU32 colorDataRGB[3] = { 0xFF6464FF, 0xFF64FF64, 0xFFFF6464 };
+		s_Instance->m_RGBMap = ImPlot::AddColormap("RGBColors", colorDataRGB, 32);
+
 		return s_Instance;
 	}
 
@@ -250,8 +256,8 @@ namespace HDR_IP
 			std::vector<float> rCB = Image_RRC::GetResponseCurveB();
 			std::vector<float> pixValueF = Image_RRC::GetPixelValueFunc();
 
-
-			if (ImPlot::BeginPlot("Response Curve", ImVec2(-1, 0))) {
+			ImPlot::PushColormap(m_RGBMap);
+			if (ImPlot::BeginPlot("Response Curve", ImVec2(-1, -1))) {
 				ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Linear);
 				ImPlot::SetupAxesLimits(-3.0, 1.5, 0, 256);
 				ImPlot::PlotLine("Red", rCR.data(), pixValueF.data(), rCR.size());
@@ -259,6 +265,7 @@ namespace HDR_IP
 				ImPlot::PlotLine("Blue", rCB.data(), pixValueF.data(), rCB.size());
 				ImPlot::EndPlot();
 			}
+			ImPlot::PopColormap();
 
 			ImGui::PopStyleVar();
 			ImGui::End();

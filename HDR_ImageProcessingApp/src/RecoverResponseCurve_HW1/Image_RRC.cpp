@@ -32,6 +32,13 @@ namespace HDR_IP
 		float variance;
 	};
 
+	struct LocVariance
+	{
+		int row;
+		int column;
+		float variance;
+	};
+
 	void Image_RRC::RecoverResponseCurve(std::vector<Ref<Image>>& images)
 	{
 		// Clear the data
@@ -69,22 +76,26 @@ namespace HDR_IP
 			HDR_IP_INFO("\t\tBrightness      : {0}", imageInfo.BrightnessValue);
 			HDR_IP_INFO("\t\tAperture Val    : {0}", imageInfo.ApertureValue);
 		}
-		
+
+
+		float extime = 1.0f / (std::pow(2, images.size()));
+
 		// Now we need to sample N Pixels for each image
 		for (int i=0; i<images.size(); i++)
 		{
 			TinyEXIF::EXIFInfo imageInfo = images[i]->GetEXIFInfo();
 			// Get Samples for each image
-			std::vector<std::vector<float>> samples = GetSamplePixelsFromImage(images[i], 400);
+			/*std::vector<std::vector<float>> samples = GetSamplePixelsFromImage(images[i], 400);
 			s_Image_RRCData.pixelsR[i] = samples[0];
 			s_Image_RRCData.pixelsG[i] = samples[1];
-			s_Image_RRCData.pixelsB[i] = samples[2];
+			s_Image_RRCData.pixelsB[i] = samples[2];*/
 
-			float extime = 1.0f;
 			if (imageInfo.ExposureTime == 0)
 			{
-				extime = ((float)i * 2 / (float)images.size()) + 0.1f;
 				s_Image_RRCData.exposureVals.push_back(std::log(extime));
+				extime *= 2;
+				// extime = std::pow(((float)i * 2 / (float)images.size()) + 0.1f, 0.4545);
+				
 			}
 			else
 			{
@@ -92,11 +103,15 @@ namespace HDR_IP
 			}
 				
 			
-		}
+		} 
 
-		s_Image_RRCData.responseCurveR = SolveSystem(s_Image_RRCData.pixelsR, s_Image_RRCData.exposureVals, 250.0);
-		s_Image_RRCData.responseCurveG = SolveSystem(s_Image_RRCData.pixelsG, s_Image_RRCData.exposureVals, 250.0);
-		s_Image_RRCData.responseCurveB = SolveSystem(s_Image_RRCData.pixelsB, s_Image_RRCData.exposureVals, 250.0);
+		s_Image_RRCData.pixelsR = GetSamplePixelsFromImages(images, 300, 'r');
+		s_Image_RRCData.pixelsG = GetSamplePixelsFromImages(images, 300, 'g');
+		s_Image_RRCData.pixelsB = GetSamplePixelsFromImages(images, 300, 'b');
+
+		s_Image_RRCData.responseCurveR = SolveSystem(s_Image_RRCData.pixelsR, s_Image_RRCData.exposureVals, 100.0);
+		s_Image_RRCData.responseCurveG = SolveSystem(s_Image_RRCData.pixelsG, s_Image_RRCData.exposureVals, 100.0);
+		s_Image_RRCData.responseCurveB = SolveSystem(s_Image_RRCData.pixelsB, s_Image_RRCData.exposureVals, 100.0);
 
 	}
 
@@ -120,6 +135,79 @@ namespace HDR_IP
 		return s_Image_RRCData.pixelValueFunc;
 	}
 
+	std::vector<std::vector<float>> Image_RRC::GetSamplePixelsFromImages(std::vector<Ref<Image>>& images, int n, char channel)
+	{
+
+		std::vector<std::vector<float>> result;
+		result.resize(images.size());
+
+		// We assume that heights and widths are completely the same
+		// and images are aligned
+		int imageHeight = images[0]->GetHeight();
+		int imageWidth = images[0]->GetWidth();
+
+		auto comp = [](LocVariance a, LocVariance b) { return a.variance < b.variance; };
+		std::priority_queue<LocVariance, std::vector<LocVariance>, decltype(comp)> pq(comp);
+
+		for (int i = 0; i < imageHeight; i++)
+		{
+			for (int j = 0; j < imageWidth; j++)
+			{
+
+				std::vector<float> intensities;
+
+				for (int k = 0; k < images.size(); k++)
+				{
+					Pixel px = images[k]->GetPixel(j, i);
+					float intensity;
+					if (channel == 'r')
+						intensity = px.r;
+					else if (channel == 'g')
+						intensity = px.g;
+					else if (channel == 'b')
+						intensity = px.b;
+					intensities.push_back(intensity);
+				}
+
+				float var = CalculateVariance(intensities);
+
+				pq.push({ j, i, var });
+
+				if ((i * j) != 0 && (imageHeight * imageWidth) % (i * j) == 0)
+					HDR_IP_INFO("Processing images => {0}%", (float)(i * j) / (float)(imageHeight * imageWidth));
+
+				j += imageWidth / 25;
+			}
+
+			i += imageHeight / 25;
+		}
+
+		int count = n >= pq.size() ? pq.size() - 1 : n;
+
+
+		for (int i = 0; i < count; i++)
+		{
+
+			LocVariance el = pq.top();
+			int row = el.row;
+			int column = el.column;
+
+			for (int j = 0; j < images.size(); j++)
+			{
+				if (channel == 'r')
+					result[j].push_back(images[j]->GetPixel(row, column).r);
+				else if (channel == 'g')
+					result[j].push_back(images[j]->GetPixel(row, column).g);
+				else if (channel == 'b')
+					result[j].push_back(images[j]->GetPixel(row, column).b);
+			}
+
+			pq.pop();
+		}
+		
+		return result;
+	}
+
 	std::vector<std::vector<float>> Image_RRC::GetSamplePixelsFromImage(Ref<Image> image, int n)
 	{
 		std::srand(std::time(nullptr));
@@ -141,7 +229,6 @@ namespace HDR_IP
 		{
 			for (int j = 0; j < imageWidth; j++)
 			{
-				HDR_IP_WARN("Pixel: ({0}, {1})", j, i);
 				Pixel px = image->GetPixel(j, i);
 				if (((px.r + px.g + px.b) / 3.0f <= 5) || ((px.r + px.g + px.b) / 3.0f >= 250))
 				{
@@ -293,5 +380,33 @@ namespace HDR_IP
 		{
 			return 255 - val;
 		}
+	}
+	float Image_RRC::GetIntensity(float r, float g, float b)
+	{
+		return 0.2989 * r + 0.5870 * g + 0.1140 * b;
+	}
+	float Image_RRC::CalculateVariance(const std::vector<float>& vals)
+	{
+		
+		// Calculate the mean
+		int n = vals.size();
+		float mean = 0;
+
+		for (auto val : vals)
+			mean += val;
+
+		mean /= n;
+
+
+		float var = 0;
+
+		for (auto val : vals)
+		{
+			var += (val - mean) * (val - mean);
+		}
+
+		var /= n;
+
+		return var;
 	}
 }

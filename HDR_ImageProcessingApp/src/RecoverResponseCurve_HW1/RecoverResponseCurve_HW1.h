@@ -36,6 +36,7 @@ namespace HDR_IP
 	private:
 		std::vector<Ref<Image>> m_Images;
 		Ref<Image> m_SelectedImage;
+		int m_RGBMap;
 	private:
 		static RecoverResponseCurve_HW1* s_Instance;
 		friend class ViewportComponent;
